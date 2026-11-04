@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from safra.chuva import maior_veranico, serie_municipal, variaveis_ano  # noqa: E402
-from safra.fontes import ler_noaa, normalizar, valor_ibge  # noqa: E402
+from safra.fontes import ler_cpt, ler_noaa, normalizar, valor_ibge  # noqa: E402
 
 
 def test_veranico():
@@ -47,6 +47,14 @@ def test_ler_noaa(tmp_path=None):
     v = ler_noaa(caminho)
     assert v[(2000, 12)] == 0.5 and v[(2001, 1)] == 1.0 and (2001, 2) not in v and len(v) == 13
 
+
+
+def test_ler_cpt():
+    import tempfile
+    caminho = Path(tempfile.mkdtemp()) / "nmme.txt"
+    caminho.write_text("xmlns:cpt=x\ncpt:nfields=1\ncpt:field=precip, cpt:T=1991-04, cpt:S=1991-03-01\n"
+                       "\t318.0\t319.0\t330.0\n-4.0\t5.5\t-999.0\t9.0\n10.0\t1.0\t1.0\t1.0\n")
+    assert ler_cpt(caminho) == {1991: {(-4.0, 318.0): 5.5}}  # fora da janela e sem dado ficam de fora
 
 if __name__ == "__main__":
     for nome, f in list(globals().items()):

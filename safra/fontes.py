@@ -15,6 +15,9 @@ SEM_DADO, DIA_INEXISTENTE = 999.0, 888.0
 # Temperatura da superfície do mar (anomalia, °C): Pacífico (El Niño 3.4) e Atlântico tropical norte e sul
 URL_NOAA = "https://psl.noaa.gov/data/correlation/{}.data"
 INDICES_NOAA = {"nino34": "nina34.anom", "tna": "tna", "tsa": "tsa"}
+# Previsão sazonal de chuva do NMME (média de 7 modelos norte-americanos), rodadas retroativas 1991–2020 em grade de 1°
+URL_NMME = ("https://ftp.cpc.ncep.noaa.gov/International/nmme/monthly_nmme_hindcast_in_cpt_format/"
+            "nmme_precip_hcst_{inicio}ic_{mes}_1991.txt")
 
 
 def normalizar(nome: str) -> str:
@@ -81,4 +84,24 @@ def ler_noaa(caminho: Path) -> dict:
         for mes, v in enumerate(c[1:], 1):
             if float(v) > -99:
                 saida[(int(c[0]), mes)] = float(v)
+    return saida
+
+
+def ler_cpt(caminho: Path, lat=(-9.0, -2.0), lon=(318.0, 324.0)) -> dict:
+    """{ano: {(lat, lon): mm/dia}} de um arquivo CPT do NMME, só a janela pedida (lon de 0 a 360; padrão: Ceará)."""
+    saida, ano, xs = {}, None, None
+    with open(caminho) as f:
+        for linha in f:
+            if linha.startswith("cpt:field"):
+                ano, xs = int(linha.split("cpt:T=")[1][:4]), None
+                saida[ano] = {}
+            elif ano is not None and xs is None and linha.startswith("\t"):
+                xs = [float(v) for v in linha.split()]
+            elif xs is not None:
+                c = linha.split()
+                y = float(c[0])
+                if lat[0] <= y <= lat[1]:
+                    for x, v in zip(xs, c[1:]):
+                        if lon[0] <= x <= lon[1] and float(v) > -900:
+                            saida[ano][(y, x)] = float(v)
     return saida
