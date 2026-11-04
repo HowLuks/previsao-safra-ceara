@@ -15,6 +15,7 @@ para prever o rendimento de cada município.
 | [IBGE, Produção Agrícola Municipal](https://sidra.ibge.gov.br/tabela/1612) (tabela 1612) | área plantada, área colhida e produção de milho e feijão por município | anual, 1974–2025 |
 | [FUNCEME, postos pluviométricos](https://chuvas.funceme.br/) | chuva diária de 844 postos | 1973–hoje; os 184 municípios a partir de 1990 |
 | [NOAA PSL, índices climáticos](https://psl.noaa.gov/data/climateindices/list/) | temperatura da superfície do mar (anomalia): El Niño 3.4, Atlântico tropical norte (TNA) e sul (TSA) | mensal, 1948–hoje |
+| [NMME, CPC/NOAA](https://ftp.cpc.ncep.noaa.gov/International/nmme/) | previsão de chuva feita em março para abril e maio, média de 7 modelos climáticos, grade de 1° | rodadas retroativas, 1991–2020 |
 
 `python scripts/montar_base.py` baixa as três fontes e grava `dados/base.csv`, com uma linha por município, ano e
 produto (13.162 linhas). Cada linha traz:
@@ -41,49 +42,54 @@ baixo, o que indica que a relação com a chuva não é linear.
 ## Resultados
 
 O notebook [`notebooks/previsao_safra.ipynb`](notebooks/previsao_safra.ipynb) treina um LightGBM e o valida ano a
-ano: para cada ano de 2006 a 2025, o modelo aprende só com os anos anteriores e prevê aquele ano, como seria usado de
+ano: para cada ano de teste, o modelo aprende só com os anos anteriores e prevê aquele ano, como seria usado de
 verdade. O alvo é o rendimento dividido pela média histórica do município (quanto o ano fica acima ou abaixo do normal
 dele); prever o rendimento direto ficou pior que a referência.
 
-Erro médio absoluto em kg/ha plantado, 2006–2025:
+Erro médio absoluto em kg/ha plantado, 2006–2020 (anos em que há previsão do NMME):
 
-| Modelo | Feijão | Milho | Geral |
-|---|---:|---:|---:|
-| Referência: média histórica do município | 121 | 358 | 239 |
-| LightGBM com chuva até março | 125 | 357 | 241 |
-| LightGBM com chuva até março + oceano e posição do município | 120 | 343 | 231 |
-| LightGBM com chuva até maio | 112 | 312 | **212** |
+| Modelo | Erro | vs. referência | Perdas de 50% ou mais: acerto ao apontar / encontradas |
+|---|---:|---:|---|
+| Referência: média histórica do município | 257 | | |
+| Chuva até março | 245 | −5% | 52% / 24% |
+| Chuva até março + índices do oceano | 241 | −6% | 62% / 15% |
+| Chuva até maio | 205 | −20% | 64% / 37% |
+| **Chuva até março + previsão do NMME** | **198** | **−23%** | 65% / 36% |
 
-- **Com a chuva até maio, o erro cai 12%** em relação à média histórica. A variável que mais pesa é a chuva da
-  quadra relativa ao normal do município.
-- **Perda de 50% ou mais** (critério do Garantia-Safra): 19% dos municípios-ano de teste tiveram. O modelo de maio
-  aponta 31% deles e acerta 62% das vezes que aponta.
-- **Até março, só a chuva não basta:** o modelo empata com a referência. Com os índices do oceano (El Niño e
-  Atlântico) e a posição do município, o erro fica 3% abaixo da referência e o acerto ao apontar perda sobe de 51% para
-  62%, mas ele aponta menos municípios (13% das perdas). O sinal do oceano tem o sentido esperado, mas é fraco:
-  correlação em torno de −0,25 com o rendimento do ano, e só há 35 anos para aprender. Na quadra completa, a chuva de
-  abril e maio já carrega essa informação, e o oceano não ajuda.
-- Em 2012, primeiro ano da grande seca, havia La Niña (que costuma trazer chuva) e o Atlântico apontava seca. Os dois
-  sinais se anularam, e a falta de chuva só ficou clara em abril e maio:
+- **Até maio, a chuva observada já dá um bom modelo.** De 2006 a 2025, o erro fica 12% abaixo da média histórica
+  (212 contra 239 kg/ha).
+- **Até março, só a chuva não basta**, e os índices do oceano (El Niño, Atlântico) ajudam pouco: o sinal tem o
+  sentido esperado, mas é fraco (correlação em torno de −0,25 com o rendimento do ano).
+- **Com a previsão sazonal do NMME, o modelo de março fica tão bom quanto o de maio**, dois meses antes. A previsão do
+  NMME tem correlação de 0,53 com o rendimento do ano, o dobro dos índices do oceano: os modelos climáticos já juntam
+  o Pacífico e o Atlântico do jeito certo. O ganho aparece em 11 dos 15 anos e é maior nas secas: em 2012 e 2016 o
+  erro cai a menos da metade.
+
+Em 2012, primeiro ano da grande seca, só a chuva até março e os índices do oceano previam uma safra normal (havia La
+Niña, que costuma trazer chuva, e o Atlântico apontava seca). Com o NMME, o modelo de março já vê a seca:
 
 ![Milho em 2012: rendimento real e previsto por município](docs/mapa_2012.png)
 
-Ressalva: a forma do alvo e as variáveis foram escolhidas olhando os mesmos anos de teste, entre poucas variantes.
+Ressalvas:
+- O NMME vem de rodadas retroativas (os modelos rodados depois, com o que se sabia em cada março). A previsão real de
+  2021 em diante não está no servidor público do CPC, então não foi testada.
+- A forma do alvo e as variáveis foram escolhidas olhando os mesmos anos de teste, entre poucas variantes.
+- O rendimento do IBGE é uma estimativa municipal, e a chuva é a média dos postos de cada município.
 
 Notebook e dados no Kaggle: [notebook](https://www.kaggle.com/code/howluks/previsao-de-safra-de-sequeiro-no-ceara) e
 [dataset](https://www.kaggle.com/datasets/howluks/safra-sequeiro-ceara) (privados por enquanto).
 
 ## Próximos passos
 
-- Previsão antecipada: o histórico de previsões sazonais da FUNCEME não serve como variável. São boletins em PDF só
-  de alguns anos (2012–2014 e 2019–2025), com uma probabilidade única para o estado. A alternativa seria a previsão
-  sazonal em grade do Copernicus (C3S) ou do NMME, que tem rodadas retroativas desde os anos 1980–1990.
+- Conseguir as previsões reais do NMME de 2021 a 2025 (o IRI Data Library tem, mas pede cadastro) e testar o modelo de
+  março nesses anos.
 - Publicar o notebook e o dataset no Kaggle.
 
 ## Como rodar
 
 ```bash
 python scripts/montar_base.py   # Python 3.10+, sem dependências
+python scripts/extrair_nmme.py  # baixa 2 arquivos de 22 MB do CPC e grava dados/nmme_ceara.csv
 python tests/test_chuva.py
 ```
 
