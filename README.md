@@ -33,11 +33,40 @@ As secas conhecidas aparecem nos dados. Em 1993, a mediana dos municípios teve 
 o mesmo se vê em 1998 e na seca de 2012–2016. O ano mais chuvoso, 2009 (mediana de 1.001 mm), também teve rendimento
 baixo, o que indica que a relação com a chuva não é linear.
 
+## Resultados
+
+O notebook [`notebooks/previsao_safra.ipynb`](notebooks/previsao_safra.ipynb) treina um LightGBM e o valida ano a
+ano: para cada ano de 2006 a 2025, o modelo aprende só com os anos anteriores e prevê aquele ano, como seria usado de
+verdade. O alvo é o rendimento dividido pela média histórica do município (quanto o ano fica acima ou abaixo do normal
+dele); prever o rendimento direto ficou pior que a referência.
+
+Erro médio absoluto em kg/ha plantado, 2006–2025:
+
+| Modelo | Feijão | Milho | Geral |
+|---|---:|---:|---:|
+| Referência: média histórica do município | 121 | 358 | 239 |
+| LightGBM com chuva até março | 125 | 357 | 241 |
+| LightGBM com chuva até maio | 112 | 312 | **212** |
+
+- **Com a chuva até maio, o erro cai 12%** em relação à média histórica. A variável que mais pesa é a chuva da
+  quadra relativa ao normal do município.
+- **Perda de 50% ou mais** (critério do Garantia-Safra): 19% dos municípios-ano de teste tiveram. O modelo de maio
+  aponta 31% deles e acerta 62% das vezes que aponta.
+- **Até março, a chuva ainda não basta:** o modelo empata com a referência. Em 2012, primeiro ano da grande seca, a
+  falta de chuva só ficou clara em abril e maio:
+
+![Milho em 2012: rendimento real e previsto por município](docs/mapa_2012.png)
+
+Ressalva: a forma do alvo foi escolhida olhando os mesmos anos de teste, entre poucas variantes.
+
+Notebook e dados no Kaggle: [notebook](https://www.kaggle.com/code/howluks/previsao-de-safra-de-sequeiro-no-ceara) e
+[dataset](https://www.kaggle.com/datasets/howluks/safra-sequeiro-ceara) (privados por enquanto).
+
 ## Próximos passos
 
-- Baseline (média do município) e modelos (regressão linear, LightGBM) com validação temporal.
-- Previsão antecipada com dados só até março.
-- Mapa do Ceará com a previsão por município, notebook e dataset no Kaggle.
+- Previsão antecipada com índices climáticos conhecidos antes da quadra (temperatura do Pacífico e do Atlântico), que
+  a FUNCEME usa na previsão sazonal.
+- Publicar o notebook e o dataset no Kaggle.
 
 ## Como rodar
 
@@ -45,3 +74,13 @@ baixo, o que indica que a relação com a chuva não é linear.
 python scripts/montar_base.py   # Python 3.10+, sem dependências
 python tests/test_chuva.py
 ```
+
+O notebook roda no Kaggle (o dataset já traz `base.csv` e a malha dos municípios) ou localmente, com `pandas`,
+`lightgbm`, `scikit-learn` e `matplotlib`, a partir da raiz do repositório. Localmente, a malha vem da API do IBGE:
+
+```bash
+curl -L -o dados/brutos/ce_municipios.geojson \
+  "https://servicodados.ibge.gov.br/api/v3/malhas/estados/23?formato=application/vnd.geo+json&intrarregiao=municipio&qualidade=minima"
+```
+
+Para subir uma versão nova do notebook: `kaggle kernels push -p notebooks`.
