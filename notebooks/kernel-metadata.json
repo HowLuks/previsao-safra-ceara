@@ -1,0 +1,13 @@
+{
+  "id": "howluks/previsao-de-safra-de-sequeiro-no-ceara",
+  "title": "Previsao de safra de sequeiro no Ceara",
+  "code_file": "previsao_safra.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "dataset_sources": ["howluks/safra-sequeiro-ceara"],
+  "competition_sources": [],
+  "kernel_sources": []
+}
