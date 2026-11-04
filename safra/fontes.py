@@ -28,14 +28,21 @@ def baixar(url: str, destino: Path) -> Path:
     return destino
 
 
+def valor_ibge(v: str):
+    """Valor do SIDRA: '-' é zero de verdade (convenção do IBGE); '...', '..' e 'X' são falta de dado e viram None."""
+    if v == "-":
+        return 0.0
+    return float(v) if v.replace(".", "").isdigit() else None
+
+
 def ler_ibge(caminho: Path) -> dict:
-    """{(cod_ibge, ano, produto): {"municipio", "area_plantada", "area_colhida", "producao"}}; '-' e '...' viram None."""
+    """{(cod_ibge, ano, produto): {"municipio", "area_plantada", "area_colhida", "producao"}}, valores por valor_ibge."""
     linhas = json.loads(caminho.read_text())[1:]  # a primeira linha é o cabeçalho
     saida = {}
     for l in linhas:
         chave = (l["D1C"], int(l["D3C"]), PRODUTOS[l["D4C"]])
         reg = saida.setdefault(chave, {"municipio": l["D1N"].split(" - ")[0]})
-        reg[VARIAVEIS[l["D2C"]]] = float(l["V"]) if l["V"].replace(".", "").isdigit() else None
+        reg[VARIAVEIS[l["D2C"]]] = valor_ibge(l["V"])
     return saida
 
 

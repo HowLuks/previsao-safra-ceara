@@ -43,9 +43,11 @@ def main():
         chuva = variaveis_ano(serie, nome_funceme[cod], ano)
         if chuva is None:
             continue
-        producao = r.get("producao") or 0.0
+        producao, area_colhida = r.get("producao"), r.get("area_colhida")
+        if producao is None or area_colhida is None:
+            continue  # IBGE sem dado ('...'): não é perda total, então não vira zero
         linhas.append({"cod_ibge": cod, "municipio": r["municipio"], "ano": ano, "produto": produto,
-                       "area_plantada": r["area_plantada"], "area_colhida": r.get("area_colhida") or 0.0,
+                       "area_plantada": r["area_plantada"], "area_colhida": area_colhida,
                        "producao": producao,
                        "rendimento": round(producao * 1000 / r["area_plantada"], 1),  # kg por ha plantado
                        **chuva})

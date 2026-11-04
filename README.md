@@ -20,7 +20,8 @@ produto (13.162 linhas). Cada linha traz:
 
 - **Produção:** `area_plantada` (ha), `area_colhida` (ha), `producao` (t) e o alvo `rendimento`, em kg por hectare
   **plantado**. Usar a área plantada, e não a colhida, faz a perda aparecer: quando a safra quebra, parte da área nem é
-  colhida.
+  colhida. Quando o IBGE marca `-` (zero), a produção entra como 0: são perdas totais, como as 19 linhas da seca de
+  2012–2016. Linha marcada `...` (sem dado) sai da base, para não confundir falta de dado com perda.
 - **Chuva do município:** média dos postos válidos de cada dia. Mês com mais de 5 dias sem nenhum posto válido vira
   falta, e o ano sem janeiro a maio completo sai da base.
   - `chuva_jan` … `chuva_jun`: total do mês (mm).

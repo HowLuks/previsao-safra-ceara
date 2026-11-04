@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from safra.chuva import maior_veranico, serie_municipal, variaveis_ano  # noqa: E402
-from safra.fontes import normalizar  # noqa: E402
+from safra.fontes import normalizar, valor_ibge  # noqa: E402
 
 
 def test_veranico():
@@ -30,6 +30,13 @@ def test_variaveis_ano():
 def test_normalizar():
     assert normalizar("Santana do Acaraú - CE") == normalizar("SANTANA DO ACARAU") == "santana do acarau"
     assert normalizar("Itapajé") == "itapaje"
+
+
+
+def test_valor_ibge():
+    assert valor_ibge("-") == 0.0  # zero de verdade: perda total
+    assert valor_ibge("...") is None and valor_ibge("X") is None  # sem dado
+    assert valor_ibge("1612") == 1612.0
 
 
 if __name__ == "__main__":
