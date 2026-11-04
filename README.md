@@ -14,8 +14,9 @@ para prever o rendimento de cada município.
 |---|---|---|
 | [IBGE, Produção Agrícola Municipal](https://sidra.ibge.gov.br/tabela/1612) (tabela 1612) | área plantada, área colhida e produção de milho e feijão por município | anual, 1974–2025 |
 | [FUNCEME, postos pluviométricos](https://chuvas.funceme.br/) | chuva diária de 844 postos | 1973–hoje; os 184 municípios a partir de 1990 |
+| [NOAA PSL, índices climáticos](https://psl.noaa.gov/data/climateindices/list/) | temperatura da superfície do mar (anomalia): El Niño 3.4, Atlântico tropical norte (TNA) e sul (TSA) | mensal, 1948–hoje |
 
-`python scripts/montar_base.py` baixa as duas fontes e grava `dados/base.csv`, com uma linha por município, ano e
+`python scripts/montar_base.py` baixa as três fontes e grava `dados/base.csv`, com uma linha por município, ano e
 produto (13.162 linhas). Cada linha traz:
 
 - **Produção:** `area_plantada` (ha), `area_colhida` (ha), `producao` (t) e o alvo `rendimento`, em kg por hectare
@@ -28,6 +29,10 @@ produto (13.162 linhas). Cada linha traz:
   - `chuva_quadra`, `dias_chuva_quadra`, `veranico_quadra`: total, dias com chuva (≥ 1 mm) e maior sequência de dias
     secos de fevereiro a maio.
   - `chuva_fev_mar`, `dias_chuva_fev_mar`, `veranico_fev_mar`: o mesmo só até março, para a previsão antecipada.
+- **Oceano** (iguais para todos os municípios no ano, já conhecidos no fim de março): `nino34_djf` (El Niño,
+  média de dezembro a fevereiro), `tna_jf` e `tsa_jf` (Atlântico norte e sul, janeiro e fevereiro) e `dipolo_jf`
+  (norte menos sul). Pacífico quente (1998, 2016) e Atlântico norte mais quente que o sul (2012) costumam trazer seca
+  ao Ceará; é com esses índices que a FUNCEME faz a previsão sazonal.
 
 As secas conhecidas aparecem nos dados. Em 1993, a mediana dos municípios teve 300 mm na quadra e 28 kg/ha de milho;
 o mesmo se vê em 1998 e na seca de 2012–2016. O ano mais chuvoso, 2009 (mediana de 1.001 mm), também teve rendimento

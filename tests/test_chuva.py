@@ -4,7 +4,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from safra.chuva import maior_veranico, serie_municipal, variaveis_ano  # noqa: E402
-from safra.fontes import normalizar, valor_ibge  # noqa: E402
+from safra.fontes import ler_noaa, normalizar, valor_ibge  # noqa: E402
 
 
 def test_veranico():
@@ -37,6 +37,15 @@ def test_valor_ibge():
     assert valor_ibge("-") == 0.0  # zero de verdade: perda total
     assert valor_ibge("...") is None and valor_ibge("X") is None  # sem dado
     assert valor_ibge("1612") == 1612.0
+
+
+
+def test_ler_noaa(tmp_path=None):
+    import tempfile
+    caminho = Path(tmp_path or tempfile.mkdtemp()) / "indice.data"
+    caminho.write_text("  2000  2001\n 2000 " + " 0.5" * 12 + "\n 2001 1.0" + " -99.99" * 11 + "\n  -99.99\n  NOAA/PSL\n")
+    v = ler_noaa(caminho)
+    assert v[(2000, 12)] == 0.5 and v[(2001, 1)] == 1.0 and (2001, 2) not in v and len(v) == 13
 
 
 if __name__ == "__main__":

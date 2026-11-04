@@ -1,4 +1,5 @@
-"""Download e leitura das duas fontes: produção agrícola do IBGE e chuva diária dos postos da FUNCEME."""
+"""Download e leitura das fontes: produção agrícola do IBGE, chuva diária dos postos da FUNCEME e índices do oceano da
+NOAA."""
 import io
 import json
 import unicodedata
@@ -11,6 +12,9 @@ URL_SIDRA = "https://apisidra.ibge.gov.br/values/t/1612/n6/in%20n3%2023/v/109,21
 PRODUTOS = {"2711": "milho", "2702": "feijao"}
 VARIAVEIS = {"109": "area_plantada", "216": "area_colhida", "214": "producao"}
 SEM_DADO, DIA_INEXISTENTE = 999.0, 888.0
+# Temperatura da superfície do mar (anomalia, °C): Pacífico (El Niño 3.4) e Atlântico tropical norte e sul
+URL_NOAA = "https://psl.noaa.gov/data/correlation/{}.data"
+INDICES_NOAA = {"nino34": "nina34.anom", "tna": "tna", "tsa": "tsa"}
 
 
 def normalizar(nome: str) -> str:
@@ -63,3 +67,18 @@ def ler_funceme(caminho: Path, meses=range(1, 7)):
                         continue
                     dias.append(None if f == SEM_DADO or f < 0 else f)
                 yield c[0], c[1], int(c[4]), int(c[5]), dias
+
+
+def ler_noaa(caminho: Path) -> dict:
+    """{(ano, mes): valor} de um índice mensal da NOAA PSL; -99.99 é falta e fica de fora."""
+    linhas = caminho.read_text().splitlines()
+    inicio, fim = map(int, linhas[0].split())
+    saida = {}
+    for linha in linhas[1:]:
+        c = linha.split()
+        if len(c) != 13 or not c[0].isdigit() or not inicio <= int(c[0]) <= fim:
+            continue  # rodapé com unidade e fonte
+        for mes, v in enumerate(c[1:], 1):
+            if float(v) > -99:
+                saida[(int(c[0]), mes)] = float(v)
+    return saida
