@@ -51,26 +51,32 @@ Erro médio absoluto em kg/ha plantado, 2006–2025:
 |---|---:|---:|---:|
 | Referência: média histórica do município | 121 | 358 | 239 |
 | LightGBM com chuva até março | 125 | 357 | 241 |
+| LightGBM com chuva até março + oceano e posição do município | 120 | 343 | 231 |
 | LightGBM com chuva até maio | 112 | 312 | **212** |
 
 - **Com a chuva até maio, o erro cai 12%** em relação à média histórica. A variável que mais pesa é a chuva da
   quadra relativa ao normal do município.
 - **Perda de 50% ou mais** (critério do Garantia-Safra): 19% dos municípios-ano de teste tiveram. O modelo de maio
   aponta 31% deles e acerta 62% das vezes que aponta.
-- **Até março, a chuva ainda não basta:** o modelo empata com a referência. Em 2012, primeiro ano da grande seca, a
-  falta de chuva só ficou clara em abril e maio:
+- **Até março, só a chuva não basta:** o modelo empata com a referência. Com os índices do oceano (El Niño e
+  Atlântico) e a posição do município, o erro fica 3% abaixo da referência e o acerto ao apontar perda sobe de 51% para
+  62%, mas ele aponta menos municípios (13% das perdas). O sinal do oceano tem o sentido esperado, mas é fraco:
+  correlação em torno de −0,25 com o rendimento do ano, e só há 35 anos para aprender. Na quadra completa, a chuva de
+  abril e maio já carrega essa informação, e o oceano não ajuda.
+- Em 2012, primeiro ano da grande seca, havia La Niña (que costuma trazer chuva) e o Atlântico apontava seca. Os dois
+  sinais se anularam, e a falta de chuva só ficou clara em abril e maio:
 
 ![Milho em 2012: rendimento real e previsto por município](docs/mapa_2012.png)
 
-Ressalva: a forma do alvo foi escolhida olhando os mesmos anos de teste, entre poucas variantes.
+Ressalva: a forma do alvo e as variáveis foram escolhidas olhando os mesmos anos de teste, entre poucas variantes.
 
 Notebook e dados no Kaggle: [notebook](https://www.kaggle.com/code/howluks/previsao-de-safra-de-sequeiro-no-ceara) e
 [dataset](https://www.kaggle.com/datasets/howluks/safra-sequeiro-ceara) (privados por enquanto).
 
 ## Próximos passos
 
-- Previsão antecipada com índices climáticos conhecidos antes da quadra (temperatura do Pacífico e do Atlântico), que
-  a FUNCEME usa na previsão sazonal.
+- Previsão antecipada: verificar se a FUNCEME publica o histórico das suas previsões sazonais de chuva e testá-las
+  como variável, no lugar dos índices brutos do oceano.
 - Publicar o notebook e o dataset no Kaggle.
 
 ## Como rodar
