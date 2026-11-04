@@ -75,8 +75,9 @@ Notebook e dados no Kaggle: [notebook](https://www.kaggle.com/code/howluks/previ
 
 ## Próximos passos
 
-- Previsão antecipada: verificar se a FUNCEME publica o histórico das suas previsões sazonais de chuva e testá-las
-  como variável, no lugar dos índices brutos do oceano.
+- Previsão antecipada: o histórico de previsões sazonais da FUNCEME não serve como variável. São boletins em PDF só
+  de alguns anos (2012–2014 e 2019–2025), com uma probabilidade única para o estado. A alternativa seria a previsão
+  sazonal em grade do Copernicus (C3S) ou do NMME, que tem rodadas retroativas desde os anos 1980–1990.
 - Publicar o notebook e o dataset no Kaggle.
 
 ## Como rodar
